@@ -7,8 +7,9 @@ services:
       - ./libretranslate/templates:/app/libretranslate/templates
       - ./libretranslate/static:/app/libretranslate/static
       - ./scripts:/app/scripts
+      - ./installed_models:/home/libretranslate/.local
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     environment:
       # --- Seguridad y Privacidad ---
       - LT_API_KEYS=true
