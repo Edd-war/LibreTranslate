@@ -1,5 +1,5 @@
 import os
-import sqlite3
+import pymysql
 import uuid
 
 import requests
@@ -12,50 +12,59 @@ DEFAULT_DB_PATH = DEFARGS['API_KEYS_DB_PATH']
 
 class Database:
     def __init__(self, db_path=DEFAULT_DB_PATH, max_cache_len=1000, max_cache_age=30):
-        # Legacy check - this can be removed at some point in the near future
-        if os.path.isfile("api_keys.db") and not os.path.isfile("db/api_keys.db"):
-            print("Migrating {} to {}".format("api_keys.db", "db/api_keys.db"))
-            try:
-                os.rename("api_keys.db", "db/api_keys.db")
-            except Exception as e:
-                print(str(e))
+        db_host = os.environ.get('DB_HOST')
+        db_port = int(os.environ.get('DB_PORT', 3306))
+        db_user = os.environ.get('DB_USER')
+        db_pass = os.environ.get('DB_PASS')
+        db_name = os.environ.get('DB_NAME')
 
-        db_dir = os.path.dirname(db_path)
-        if db_dir != '' and not os.path.exists(db_dir):
-            os.makedirs(db_dir)
-        self.db_path = db_path
         self.cache = ExpiringDict(max_len=max_cache_len, max_age_seconds=max_cache_age)
 
-        # Make sure to do data synchronization on writes!
-        self.c = sqlite3.connect(db_path, check_same_thread=False)
-        self.c.execute(
-            """CREATE TABLE IF NOT EXISTS api_keys (
-            "api_key"	TEXT NOT NULL,
-            "req_limit"	INTEGER NOT NULL,
-            "char_limit" INTEGER DEFAULT NULL,
-            PRIMARY KEY("api_key")
-        );"""
+        self.conn = pymysql.connect(
+            host=db_host,
+            port=db_port,
+            user=db_user,
+            password=db_pass,
+            database=db_name,
+            autocommit=True
         )
 
-        # Schema/upgrade checks
-        schema = self.c.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='api_keys';").fetchone()[0]
-        if '"char_limit" INTEGER DEFAULT NULL' not in schema:
-            self.c.execute('ALTER TABLE api_keys ADD COLUMN "char_limit" INTEGER DEFAULT NULL;')
+        with self.conn.cursor() as cursor:
+            cursor.execute(
+                """CREATE TABLE IF NOT EXISTS api_keys (
+                api_key VARCHAR(255) PRIMARY KEY,
+                req_limit INT,
+                char_limit INT DEFAULT NULL
+            );"""
+            )
+            
+            # Asegurar que char_limit exista si la tabla fue creada previamente sin él
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = 'api_keys'
+                AND COLUMN_NAME = 'char_limit'
+                AND TABLE_SCHEMA = %s
+            """, (db_name,))
+            if cursor.fetchone()[0] == 0:
+                cursor.execute("ALTER TABLE api_keys ADD COLUMN char_limit INT DEFAULT NULL;")
 
     def lookup(self, api_key):
         val = self.cache.get(api_key)
         if val is None:
             # DB Lookup
-            stmt = self.c.execute(
-                "SELECT req_limit, char_limit FROM api_keys WHERE api_key = ?", (api_key,)
-            )
-            row = stmt.fetchone()
-            if row is not None:
-                self.cache[api_key] = row
-                val = row
-            else:
-                self.cache[api_key] = False
-                val = False
+            with self.conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT req_limit, char_limit FROM api_keys WHERE api_key = %s", (api_key,)
+                )
+                row = cursor.fetchone()
+                if row is not None:
+                    # LibreTranslate expects (req_limit, char_limit)
+                    self.cache[api_key] = row
+                    val = row
+                else:
+                    self.cache[api_key] = False
+                    val = False
 
         if isinstance(val, bool):
             val = None
@@ -69,21 +78,23 @@ class Database:
             char_limit = None
 
         self.remove(api_key)
-        self.c.execute(
-            "INSERT INTO api_keys (api_key, req_limit, char_limit) VALUES (?, ?, ?)",
-            (api_key, req_limit, char_limit),
-        )
-        self.c.commit()
+        with self.conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO api_keys (api_key, req_limit, char_limit) VALUES (%s, %s, %s)",
+                (api_key, req_limit, char_limit),
+            )
         return (api_key, req_limit, char_limit)
 
     def remove(self, api_key):
-        self.c.execute("DELETE FROM api_keys WHERE api_key = ?", (api_key,))
-        self.c.commit()
+        with self.conn.cursor() as cursor:
+            cursor.execute("DELETE FROM api_keys WHERE api_key = %s", (api_key,))
         return api_key
 
     def all(self):
-        row = self.c.execute("SELECT api_key, req_limit, char_limit FROM api_keys")
-        return row.fetchall()
+        with self.conn.cursor() as cursor:
+            cursor.execute("SELECT api_key, req_limit, char_limit FROM api_keys")
+            rows = cursor.fetchall()
+            return rows
 
 
 class RemoteDatabase:

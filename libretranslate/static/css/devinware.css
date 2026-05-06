@@ -1,0 +1,153 @@
+/* Devinware Corporate Identity for LibreTranslate */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  --background: #0a0e1a;
+  --foreground: oklch(0.96 0.02 265);
+  --primary: oklch(0.55 0.25 260);
+  --secondary: oklch(0.85 0.15 195);
+  --card: rgba(18, 22, 45, 0.75);
+  --border: rgba(0, 240, 255, 0.15);
+  --radius: 0.5rem;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif !important;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Background Grids and Glow */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    linear-gradient(to right, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 80%);
+  pointer-events: none;
+}
+
+h1, h2, h3, h4, .brand-logo, .slogan {
+  font-family: 'Space Grotesk', sans-serif !important;
+}
+
+/* Navbar overrides */
+nav, #nav, #nav-mobile, .locale-panel, .page-footer {
+  background-color: rgba(12, 15, 35, 0.9) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+nav a, nav .material-icons {
+  color: var(--foreground) !important;
+}
+
+/* Translation Form specific styles for Professional Modern UI */
+#translation-form {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  margin-top: 1rem;
+}
+
+/* Text Areas (Translation boxes) */
+.textarea-container textarea {
+  background: rgba(10, 12, 30, 0.5) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius);
+  color: var(--foreground) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.textarea-container textarea:focus {
+  border-color: var(--secondary) !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 2px 4px rgba(0,0,0,0.2) !important;
+  outline: none !important;
+}
+
+/* Select Dropdowns */
+.language-select select {
+  background-color: rgba(10, 12, 30, 0.5) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius);
+  padding: 0.5rem !important;
+  height: auto !important;
+  transition: border-color 0.3s ease;
+}
+
+.language-select select:focus {
+  border-color: var(--secondary) !important;
+  outline: none;
+}
+
+.language-select span {
+  color: var(--secondary) !important;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-switch-language i {
+  color: var(--secondary) !important;
+}
+
+/* Buttons */
+.btn-switch-type.active {
+  background: linear-gradient(135deg, var(--secondary), var(--primary)) !important;
+  border: none !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3) !important;
+}
+
+.btn-switch-type {
+  background: rgba(10, 12, 30, 0.5) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  transition: all 0.3s ease;
+}
+
+.btn-switch-type:hover {
+  border-color: var(--secondary) !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) !important;
+}
+
+/* Footer styling */
+.page-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+  border-bottom: none; /* remove nav border-bottom from footer */
+}
+
+/* Devinware Text Gradient */
+.text-gradient {
+  background: linear-gradient(135deg, oklch(0.85 0.15 195), oklch(0.55 0.25 260));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Layout optimization for translation boxes */
+@media (min-width: 992px) {
+  .textarea-container textarea {
+    min-height: 250px;
+  }
+}

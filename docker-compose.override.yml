@@ -1,0 +1,34 @@
+services:
+  libretranslate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./libretranslate/templates:/app/libretranslate/templates
+      - ./libretranslate/static:/app/libretranslate/static
+      - ./scripts:/app/scripts
+    ports:
+      - "5000:5000"
+    environment:
+      # --- Seguridad y Privacidad ---
+      - LT_API_KEYS=true
+      - LT_REQ_LIMIT=0
+
+      # --- Restricciones ---
+      - LT_CHAR_LIMIT=15000
+
+      # --- Modelos y Rendimiento ---
+      - LT_LOAD_ONLY=en,es
+      - LT_UPDATE_MODELS=true
+
+      # --- Funcionalidades Extras ---
+      # (La traducción de archivos viene habilitada por defecto en el core de LibreTranslate)
+      - LT_SUGGESTIONS=true
+      - LT_METRICS=true
+
+      # --- Conexión MySQL (Inyectada desde .env) ---
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
