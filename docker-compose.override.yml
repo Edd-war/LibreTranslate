@@ -8,8 +8,9 @@ services:
       - ./libretranslate/static:/app/libretranslate/static
       - ./scripts:/app/scripts
       - ./installed_models:/home/libretranslate/.local
-    ports:
-      - "127.0.0.1:5000:5000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       # --- Seguridad y Privacidad ---
       - LT_API_KEYS=true
