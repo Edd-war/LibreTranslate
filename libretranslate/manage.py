@@ -41,9 +41,6 @@ def manage():
     args = parser.parse_args()
 
     if args.command == "keys":
-        if not os.path.exists(args.api_keys_db_path):
-            print("No such database: %s" % args.api_keys_db_path)
-            exit(1)
         db = Database(args.api_keys_db_path)
         if args.sub_command is None:
             # Print keys
