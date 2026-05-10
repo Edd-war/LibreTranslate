@@ -562,14 +562,20 @@ def create_app(args):
     # Add cors
     @bp.after_request
     def after_request(response):
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add(
-            "Access-Control-Allow-Headers", "Authorization, Content-Type"
-        )
+        origin = request.headers.get("Origin")
+        allowed_origin = args.cors_origin if args.cors_origin else (origin if origin else "*")
+        allow_credentials = args.cors_credentials
+
+        # If credentials are allowed, origin cannot be "*"
+        if allow_credentials and allowed_origin == "*":
+            allowed_origin = origin if origin else "*"
+
+        response.headers.add("Access-Control-Allow-Origin", allowed_origin)
+        response.headers.add("Access-Control-Allow-Headers", args.cors_headers)
         response.headers.add("Access-Control-Expose-Headers", "Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "GET, POST")
-        response.headers.add("Access-Control-Allow-Credentials", "true")
-        response.headers.add("Access-Control-Max-Age", 60 * 60 * 24 * 20)
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+        response.headers.add("Access-Control-Allow-Credentials", "true" if allow_credentials else "false")
+        response.headers.add("Access-Control-Max-Age", str(60 * 60 * 24 * 20))
         return response
 
     @bp.post("/translate")
