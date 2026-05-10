@@ -559,25 +559,6 @@ def create_app(args):
         """
         return jsonify({"status": "ok"})
 
-    # Add cors
-    @bp.after_request
-    def after_request(response):
-        origin = request.headers.get("Origin")
-        allowed_origin = args.cors_origin if args.cors_origin else (origin if origin else "*")
-        allow_credentials = args.cors_credentials
-
-        # If credentials are allowed, origin cannot be "*"
-        if allow_credentials and allowed_origin == "*":
-            allowed_origin = origin if origin else "*"
-
-        response.headers.add("Access-Control-Allow-Origin", allowed_origin)
-        response.headers.add("Access-Control-Allow-Headers", args.cors_headers)
-        response.headers.add("Access-Control-Expose-Headers", "Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-        response.headers.add("Access-Control-Allow-Credentials", "true" if allow_credentials else "false")
-        response.headers.add("Access-Control-Max-Age", str(60 * 60 * 24 * 20))
-        return response
-
     @bp.post("/translate")
     @access_check
     def translate():
@@ -1321,6 +1302,31 @@ def create_app(args):
         app.config["TEMPLATES_AUTO_RELOAD"] = True
 
     app.register_blueprint(bp)
+
+    @app.before_request
+    def handle_options_preflight():
+        if request.method == "OPTIONS":
+            res = make_response()
+            res.status_code = 200
+            return res
+
+    @app.after_request
+    def after_request_cors(response):
+        origin = request.headers.get("Origin")
+        allowed_origin = args.cors_origin if args.cors_origin else (origin if origin else "*")
+        allow_credentials = args.cors_credentials
+
+        # If credentials are allowed, origin cannot be "*"
+        if allow_credentials and allowed_origin == "*":
+            allowed_origin = origin if origin else "*"
+
+        response.headers.add("Access-Control-Allow-Origin", allowed_origin)
+        response.headers.add("Access-Control-Allow-Headers", args.cors_headers)
+        response.headers.add("Access-Control-Expose-Headers", "Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+        response.headers.add("Access-Control-Allow-Credentials", "true" if allow_credentials else "false")
+        response.headers.add("Access-Control-Max-Age", str(60 * 60 * 24 * 20))
+        return response
 
     limiter.init_app(app)
 
