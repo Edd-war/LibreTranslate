@@ -253,7 +253,7 @@ _default_options_objects = [
     },
     {
         'name': 'CORS_HEADERS',
-        'default_value': 'Authorization, Content-Type, X-Requested-With, Accept, Origin, time-zone, time-iso, time-iso8601',
+        'default_value': 'Authorization, Content-Type, X-Requested-With, Accept, Origin, time-zone, time-iso, time-iso8601, X-Xsrf-Token, X-Socket-Id',
         'value_type': 'str'
     },
 ]
