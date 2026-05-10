@@ -249,6 +249,24 @@ def get_parser():
         type=str,
         help="Add a prefix like /url-prefix to URL: example.com:5000/url-prefix/",
     )
+    parser.add_argument(
+        "--cors-origin",
+        default=DEFARGS['CORS_ORIGIN'],
+        type=str,
+        help="Allowed CORS origin (%(default)s)",
+    )
+    parser.add_argument(
+        "--cors-credentials",
+        default=DEFARGS['CORS_CREDENTIALS'],
+        action=argparse.BooleanOptionalAction if hasattr(argparse, 'BooleanOptionalAction') else 'store_true',
+        help="Whether to allow CORS credentials",
+    )
+    parser.add_argument(
+        "--cors-headers",
+        default=DEFARGS['CORS_HEADERS'],
+        type=str,
+        help="Allowed CORS headers (%(default)s)",
+    )
     return parser
 
 def get_args():
